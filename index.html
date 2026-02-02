@@ -1,0 +1,894 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Checkmyslot</title>
+  <style>
+    :root{
+      --bg1:#070316;
+      --bg2:#0b1236;
+      --card:#0e0b1f;
+      --stroke:rgba(255,255,255,.12);
+      --txt:rgba(255,255,255,.92);
+      --muted:rgba(255,255,255,.68);
+      --accent:#7c5cff;
+      --accent2:#00e5ff;
+      --glow:rgba(124,92,255,.45);
+      --glow2:rgba(0,229,255,.35);
+    }
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      color:var(--txt);
+      min-height:100svh;
+      overflow-x:hidden;
+      background:
+        radial-gradient(900px 600px at 20% 15%, rgba(124,92,255,.28), transparent 60%),
+        radial-gradient(900px 600px at 85% 25%, rgba(0,229,255,.22), transparent 60%),
+        radial-gradient(700px 600px at 50% 90%, rgba(255,64,129,.14), transparent 60%),
+        linear-gradient(160deg, var(--bg1), var(--bg2));
+    }
+
+    /* floating sparkles */
+    .sparkles{position:fixed; inset:0; pointer-events:none; overflow:hidden;}
+    .sparkle{
+      position:absolute;
+      width:10px; height:10px;
+      border-radius:50%;
+      background:radial-gradient(circle at 30% 30%, rgba(255,255,255,.95), rgba(255,255,255,0) 60%);
+      filter:drop-shadow(0 0 10px rgba(124,92,255,.35));
+      opacity:.8;
+      animation: drift var(--t) linear infinite;
+    }
+    @keyframes drift{
+      from{ transform:translate3d(var(--x1), 110vh, 0) scale(var(--s)); }
+      to{ transform:translate3d(var(--x2), -20vh, 0) scale(var(--s)); }
+    }
+
+    header{
+      position:sticky;
+      top:0;
+      backdrop-filter: blur(14px);
+      background: linear-gradient(180deg, rgba(7,3,22,.82), rgba(7,3,22,.35));
+      border-bottom:1px solid rgba(255,255,255,.08);
+      z-index:10;
+    }
+
+    .wrap{max-width:1200px; margin:0 auto; padding:18px 18px 26px;}
+    .top{
+      display:flex;
+      gap:14px;
+      align-items:center;
+      justify-content:space-between;
+      flex-wrap:wrap;
+    }
+
+    .brand{
+      display:flex; align-items:center; gap:12px;
+    }
+    .chip{
+      width:44px; height:44px; border-radius:14px;
+      background:
+        radial-gradient(circle at 30% 30%, rgba(255,255,255,.22), transparent 40%),
+        linear-gradient(135deg, rgba(124,92,255,.9), rgba(0,229,255,.7));
+      box-shadow:
+        0 12px 32px rgba(0,0,0,.35),
+        0 0 0 1px rgba(255,255,255,.14) inset,
+        0 0 40px rgba(124,92,255,.22);
+      position:relative;
+      overflow:hidden;
+      animation: chipPulse 2.8s ease-in-out infinite;
+    }
+    .chip::after{
+      content:"";
+      position:absolute; inset:-50%;
+      background:conic-gradient(from 180deg, rgba(255,255,255,0), rgba(255,255,255,.18), rgba(255,255,255,0));
+      animation: spin 3.4s linear infinite;
+    }
+    @keyframes spin{to{transform:rotate(360deg)}}
+    @keyframes chipPulse{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}
+
+    h1{
+      margin:0;
+      font-size:28px;
+      letter-spacing:.2px;
+      line-height:1.1;
+    }
+    .subtitle{margin:4px 0 0; color:var(--muted); font-size:13px}
+
+    .controls{
+      display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+    }
+
+    .seg{
+      display:flex;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(10,8,22,.55);
+      border-radius:999px;
+      padding:5px;
+      box-shadow: 0 10px 28px rgba(0,0,0,.22);
+    }
+    .seg button{
+      border:0;
+      background:transparent;
+      color:var(--muted);
+      padding:10px 14px;
+      border-radius:999px;
+      font-weight:700;
+      letter-spacing:.2px;
+      cursor:pointer;
+      transition: .18s ease;
+      user-select:none;
+    }
+    .seg button.active{
+      color:var(--txt);
+      background: linear-gradient(135deg, rgba(124,92,255,.9), rgba(0,229,255,.75));
+      box-shadow: 0 10px 26px rgba(0,0,0,.25), 0 0 0 1px rgba(255,255,255,.18) inset;
+    }
+
+    .search{
+      display:flex; align-items:center; gap:10px;
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(10,8,22,.55);
+      box-shadow: 0 10px 28px rgba(0,0,0,.22);
+      min-width:260px;
+    }
+    .search svg{opacity:.8}
+    .search input{
+      width:100%;
+      border:0;
+      outline:0;
+      color:var(--txt);
+      background:transparent;
+      font-size:14px;
+    }
+    .search input::placeholder{color:rgba(255,255,255,.55)}
+
+    main{padding: 22px 0 34px;}
+
+    .hint{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin: 10px 0 16px;
+      color:var(--muted);
+      font-size:13px;
+    }
+    .badge{
+      display:inline-flex;
+      gap:8px; align-items:center;
+      border:1px solid rgba(255,255,255,.12);
+      padding:8px 10px;
+      border-radius:999px;
+      background:rgba(255,255,255,.06);
+    }
+    .dot{
+      width:8px; height:8px; border-radius:99px;
+      background:linear-gradient(135deg, var(--accent), var(--accent2));
+      box-shadow:0 0 12px rgba(124,92,255,.45);
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    @media (max-width:1100px){.grid{grid-template-columns: repeat(5, 1fr)}}
+    @media (max-width:980px){.grid{grid-template-columns: repeat(4, 1fr)}}
+    @media (max-width:760px){.grid{grid-template-columns: repeat(3, 1fr)}}
+    @media (max-width:520px){.grid{grid-template-columns: repeat(2, 1fr)} .search{min-width:100%}}
+
+    .card{
+      position:relative;
+      border-radius:999px;
+      aspect-ratio:1/1;
+      background:
+        radial-gradient(circle at 30% 20%, rgba(255,255,255,.12), transparent 35%),
+        linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
+      border:1px solid rgba(255,255,255,.12);
+      overflow:hidden;
+      cursor:pointer;
+      transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+      box-shadow:
+        0 18px 44px rgba(0,0,0,.38),
+        0 0 0 1px rgba(255,255,255,.08) inset;
+    }
+    .card::before{
+      content:"";
+      position:absolute;
+      inset:-30%;
+      background:conic-gradient(from 220deg,
+        rgba(124,92,255,.0),
+        rgba(124,92,255,.35),
+        rgba(0,229,255,.30),
+        rgba(255,64,129,.20),
+        rgba(124,92,255,.0)
+      );
+      filter: blur(14px);
+      opacity:.65;
+      animation: swirl 6.6s linear infinite;
+    }
+    @keyframes swirl{to{transform:rotate(360deg)}}
+
+    .card:hover{
+      transform: translateY(-3px) scale(1.02);
+      border-color: rgba(255,255,255,.22);
+      box-shadow:
+        0 20px 56px rgba(0,0,0,.44),
+        0 0 32px var(--glow),
+        0 0 28px var(--glow2);
+    }
+
+    .inner{
+      position:absolute; inset:10px;
+      border-radius:999px;
+      background: rgba(7,3,22,.72);
+      border:1px solid rgba(255,255,255,.10);
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      padding:16px;
+      text-align:center;
+    }
+
+    .logo{
+      width:58px; height:58px;
+      border-radius:16px;
+      background:rgba(255,255,255,.06);
+      display:grid; place-items:center;
+      overflow:hidden;
+      box-shadow: 0 10px 26px rgba(0,0,0,.30);
+    }
+    .logo img{
+      width:100%; height:100%; object-fit:cover;
+      transform: scale(1.02);
+    }
+
+    .name{
+      font-weight:900;
+      letter-spacing:.25px;
+      font-size:14px;
+      line-height:1.15;
+      text-shadow: 0 8px 24px rgba(0,0,0,.45);
+    }
+
+    .tag{
+      font-size:11px;
+      color:rgba(255,255,255,.75);
+      border:1px solid rgba(255,255,255,.12);
+      padding:6px 10px;
+      border-radius:999px;
+      background:rgba(255,255,255,.06);
+    }
+
+    .empty{
+      margin:40px 0 0;
+      color:rgba(255,255,255,.7);
+      text-align:center;
+      padding:28px;
+      border:1px dashed rgba(255,255,255,.18);
+      border-radius:18px;
+      background:rgba(255,255,255,.05);
+    }
+
+    /* modal */
+    .modal-backdrop{
+      position:fixed; inset:0;
+      background:rgba(0,0,0,.62);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+      z-index:50;
+    }
+    .modal{
+      width:min(520px, 100%);
+      border-radius:22px;
+      background: rgba(10,8,22,.92);
+      border:1px solid rgba(255,255,255,.14);
+      box-shadow: 0 26px 80px rgba(0,0,0,.55);
+      overflow:hidden;
+    }
+    .modal header{
+      position:relative;
+      background:transparent;
+      border:0;
+      backdrop-filter:none;
+    }
+    .modal-head{
+      padding:16px 16px 10px;
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+    }
+    .modal-title{margin:0; font-size:18px; font-weight:900;}
+    .modal-sub{margin:4px 0 0; color:var(--muted); font-size:12px;}
+    .x{
+      border:1px solid rgba(255,255,255,.16);
+      background:rgba(255,255,255,.06);
+      color:var(--txt);
+      border-radius:12px;
+      width:38px; height:38px;
+      cursor:pointer;
+      font-size:18px;
+      line-height:1;
+    }
+    .modal-body{padding: 0 16px 16px;}
+    .links{display:flex; flex-direction:column; gap:10px; margin-top:10px;}
+    .linkbtn{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding:12px 12px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.14);
+      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
+      color:var(--txt);
+      text-decoration:none;
+      font-weight:800;
+      letter-spacing:.2px;
+      transition:.16s ease;
+    }
+    .linkbtn:hover{transform:translateY(-1px); border-color:rgba(255,255,255,.22); box-shadow:0 0 26px rgba(124,92,255,.22)}
+    .arrow{opacity:.85}
+
+    footer{
+      padding: 10px 18px 22px;
+      color: rgba(255,255,255,.55);
+      font-size:12px;
+      text-align:center;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="sparkles" id="sparkles"></div>
+
+  <header>
+    <div class="wrap">
+      <div class="top">
+        <div class="brand" aria-label="Checkmyslot">
+          <div class="chip" title="Checkmyslot"></div>
+          <div>
+            <h1>Checkmyslot</h1>
+            <div class="subtitle">Tap a game to open the <b id="modeLabel">Player</b> portal</div>
+          </div>
+        </div>
+
+        <div class="controls">
+          <div class="seg" role="tablist" aria-label="Mode">
+            <button id="btnPlayer" class="active" role="tab" aria-selected="true">Player</button>
+            <button id="btnAgent" role="tab" aria-selected="false">Agent</button>
+          </div>
+
+          <div class="search" role="search">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" stroke="currentColor" stroke-width="2" opacity=".9"/>
+              <path d="M16.2 16.2 21 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <input id="search" placeholder="Search game…" autocomplete="off" />
+          </div>
+        </div>
+      </div>
+
+      <div class="hint">
+        <div class="badge"><span class="dot"></span><span id="count">0</span> games</div>
+        <div class="badge" title="No links shown — only game names">
+          Clean view • Circle cards • Gaps
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div id="grid" class="grid" aria-label="Game list"></div>
+    <div id="empty" class="empty" style="display:none">No games matched your search.</div>
+  </main>
+
+  <div class="modal-backdrop" id="modalBackdrop" role="dialog" aria-modal="true" aria-label="Agent links">
+    <div class="modal">
+      <header>
+        <div class="modal-head">
+          <div>
+            <p class="modal-title" id="modalTitle">Agent Links</p>
+            <p class="modal-sub" id="modalSub">Choose where to open</p>
+          </div>
+          <button class="x" id="modalClose" aria-label="Close">×</button>
+        </div>
+      </header>
+      <div class="modal-body">
+        <div class="links" id="modalLinks"></div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    © <span id="year"></span> Checkmyslot • Built for quick switching between Player & Agent portals
+  </footer>
+
+  <script>
+    // ======= DATA =======
+    // NOTE: Links are NOT shown in the UI — only used when you click.
+    const GAMES = [
+      {
+        name: "Ultra Panda",
+        image: "https://image2url.com/r2/default/images/1769966458294-5a77191f-4804-4799-874e-a2f07eb18868.png",
+        playerUrl: "https://www.ultrapanda.club/",
+        agent: "https://ht.ultrapanda.club/#/login?redirect=%2F"
+      },
+      {
+        name: "VBlink",
+        image: "https://image2url.com/r2/default/images/1769966705875-e2bc8653-9b2d-4f15-a7a3-5850526d3ecd.png",
+        playerUrl: "https://www.vblink777.club/",
+        agent: "https://gm.vblink777.club/#/login?redirect=%2Findex"
+      },
+      {
+        name: "Riversweeps",
+        image: "https://image2url.com/r2/default/images/1769966751773-7cf9c7ba-c4a6-4583-8b57-50227eff6488.png",
+        playerUrl: "https://river777.com/?v=new",
+        agent: "https://river-pay.com/office/login"
+      },
+      {
+        name: "Orion Star",
+        image: "https://image2url.com/r2/default/images/1769966793019-394d42a4-a5ce-4fa2-bf61-4ee507563e4f.png",
+        playerUrl: "http://start.orionstars.vip:8580/index.html",
+        agent: "https://orionstars.vip:8781/default.aspx?639055031814979232"
+      },
+      {
+        name: "Fire Kirin",
+        image: "https://image2url.com/r2/default/images/1770027453218-22814d4c-1043-415f-99ad-4f914753d798.png",
+        playerUrl: "http://start.firekirin.xyz:8580/index.html",
+        agent: "https://firekirin.xyz:8888/"
+      },
+      {
+        name: "Panda Master",
+        image: "https://image2url.com/r2/default/images/1770027484686-0246e81a-0c79-40fa-b0e4-9782bc89506f.png",
+        playerUrl: "https://pandamaster.vip:8888/index.html",
+        agent: "https://pandamaster.vip/default.aspx"
+      },
+      {
+        name: "Vegas X",
+        image: "https://image2url.com/r2/default/images/1770027517948-646b60ec-5728-4dcc-a559-c4c74e7a0679.png",
+        playerUrl: "https://vegas-x.org/",
+        agent: [
+          { label: "Admin", url: "https://admin.vegas-x.org/login" },
+          { label: "Cashier", url: "https://cashier.vegas-x.org/login" }
+        ]
+      },
+      {
+        name: "Milkyway",
+        image: "https://image2url.com/r2/default/images/1770027543015-78b1d2e8-1c23-4ec5-a9f4-4a77d9a98554.png",
+        playerUrl: "https://milkywayapp.xyz/",
+        agent: "https://milkywayapp.xyz:8781/default.aspx?639055843572906507"
+      },
+      {
+        name: "Vegas Sweeps",
+        image: "https://image2url.com/r2/default/images/1770027589307-6277cfe8-5071-4179-99cc-8535b39d5471.png",
+        playerUrl: "https://m.lasvegassweeps.com/",
+        agent: "https://agent.lasvegassweeps.com/adminList"
+      },
+      {
+        name: "Game Room",
+        image: "https://image2url.com/r2/default/images/1770027612333-e748bd7e-0bd6-46c7-a105-acadd26308c1.png",
+        playerUrl: "https://www.gameroom777.com/",
+        agent: "https://agentserver.gameroom777.com/admin/login"
+      },
+      {
+        name: "Juwa",
+        image: "https://image2url.com/r2/default/images/1770027639795-f3e639a1-7148-4fd8-a04d-a69c2ac1f0e0.png",
+        playerUrl: "https://dl.juwa777.com/",
+        agent: "https://ht.juwa777.com/login"
+      },
+      {
+        name: "Juwa 2.0",
+        image: "https://image2url.com/r2/default/images/1770027664375-5f818a40-a35e-4f03-aa8c-2acb2129a995.png",
+        playerUrl: "https://m.juwa2.com/",
+        agent: "https://agent.juwa2.com/"
+      },
+      {
+        name: "GameVault",
+        image: "https://image2url.com/r2/default/images/1770027683666-b8e84323-3e43-4e94-88fb-a26e36e5e5a8.png",
+        playerUrl: "https://download.gamevault999.com/",
+        agent: "https://agent.gamevault999.com/login"
+      },
+      {
+        name: "Golden Treasure",
+        image: "https://image2url.com/r2/default/images/1770027710618-954d96f1-3a37-48f7-b65d-5d7dd70788b1.png",
+        playerUrl: "https://www.goldentreasure.mobi/",
+        agent: "https://agent.goldentreasure.mobi/"
+      },
+      {
+        name: "Acebook",
+        image: "https://image2url.com/r2/default/images/1770027748113-7e480c73-dba2-4f0a-a775-a363a65f699a.png",
+        playerUrl: "https://www.playacebook.mobi/",
+        agent: "https://djwae.playacebook.mobi/#/login?redirect=%2F"
+      },
+      {
+        name: "Highroller",
+        image: "https://image2url.com/r2/default/images/1770027968883-16403937-0767-4e86-a5f1-78e953b18234.png",
+        playerUrl: "https://www.highrollerdownload.com/",
+        agent: "https://highroller.cc/default.aspx?638369587703264834"
+      },
+      {
+        name: "YOLO",
+        image: "https://image2url.com/r2/default/images/1770027990564-ad460caa-b61e-4609-8fcc-492a9c20466c.png",
+        playerUrl: "https://yolo777.game/",
+        agent: "https://agent.yolo777.game/admin/auth/login"
+      },
+      {
+        name: "EGame",
+        image: "https://image2url.com/r2/default/images/1770028022147-62dfcae0-d556-4920-b281-5520a430af22.png",
+        playerUrl: "https://www.egame99.club/",
+        agent: "https://pko.egame99.club/#/login?redirect=%2Freport%2Fagent-total-profit"
+      },
+      {
+        name: "Moolah",
+        image: "https://image2url.com/r2/default/images/1770028069908-4b63416e-cbc4-4b03-9c90-ba6008a481cb.png",
+        playerUrl: "https://moolah.vip:8888/",
+        agent: "https://moolah.vip:8781/"
+      },
+      {
+        name: "Joker",
+        image: "https://image2url.com/r2/default/images/1770028107260-845d6eed-d914-44c9-83cc-8cef76f9842a.png",
+        playerUrl: "https://www.joker777.win/",
+        agent: "https://agent.joker777.win/admin/login"
+      },
+      {
+        name: "Loot",
+        image: "https://image2url.com/r2/default/images/1770028148130-8628f6f9-8304-4456-b00d-208c0d703646.png",
+        playerUrl: "https://m.lootgame777.com/",
+        agent: "https://client.lootgame777.com/login"
+      },
+      {
+        name: "Kraken",
+        image: "https://image2url.com/r2/default/images/1770028191524-a7cc4e1d-ee89-406f-ba3c-e639b37848cd.png",
+        playerUrl: "https://getthekraken.com/index.html",
+        agent: "https://krakenbackend.com:8781/default.aspx"
+      },
+      {
+        name: "Cash Frenzy",
+        image: "https://image2url.com/r2/default/images/1770028230633-551ecace-04f0-4eea-96ec-54fc315b9bd6.png",
+        playerUrl: "https://www.cashfrenzy777.com/",
+        agent: "https://agentserver.cashfrenzy777.com/admin/login"
+      },
+      {
+        name: "Cash Machine",
+        image: "https://image2url.com/r2/default/images/1770028266420-4774fcec-b25b-40bc-b562-6263567d2c42.png",
+        playerUrl: "https://www.cashmachine777.com/",
+        agent: "https://agentserver.cashmachine777.com/admin/login"
+      },
+      {
+        name: "Blue Dragon",
+        image: "https://image2url.com/r2/default/images/1770028302948-7a55c867-c253-4a7c-8d35-eedb53ddb497.png",
+        playerUrl: "http://app.bluedragon777.com/",
+        agent: "https://agent.bluedragon777.com/Work/com_AccountList.aspx?rid=3360597"
+      },
+      {
+        name: "Highstakes",
+        image: "https://image2url.com/r2/default/images/1770028341287-fb47f930-b31e-491c-89eb-5d11acb954ee.png",
+        playerUrl: "https://dl.highstakesweeps.com/",
+        agent: "https://ht.highstakesweeps.com/login"
+      },
+      {
+        name: "Megaspin",
+        image: "https://image2url.com/r2/default/images/1770028371568-7619b285-3ab8-4887-9295-e063061a029c.png",
+        playerUrl: "https://www.megaspinsweeps.com/index.html",
+        agent: "https://megaspinpay.com/"
+      },
+      {
+        name: "River Monster",
+        image: "https://image2url.com/r2/default/images/1770028404265-b86263e5-624e-42cc-af05-262e25f18c85.png",
+        playerUrl: "https://rm777.net/",
+        agent: "https://www.rm-pay.com:8888/"
+      },
+      {
+        name: "Casino Ignite",
+        image: "https://image2url.com/r2/default/images/1770028436288-6ac02f24-f1ae-4814-adf5-cf4046e443cd.png",
+        playerUrl: "https://h5.casinoignitee.vip/",
+        agent: "https://agent.casinoignitee.vip/"
+      },
+      {
+        name: "Mafia",
+        image: "https://image2url.com/r2/default/images/1770028470998-7e134df8-8f0c-443c-938e-85a89df9e271.png",
+        playerUrl: "https://www.mafia77777.com/",
+        agent: "https://agentserver.mafia77777.com/admin/login"
+      },
+      {
+        name: "Noble",
+        image: "https://image2url.com/r2/default/images/1770028508359-d4b0ffb2-1aaf-4afa-a3e6-b23c307b7b7c.png",
+        playerUrl: "https://www.noble777.com/",
+        agent: "https://agentserver.noble777.com/admin/login"
+      },
+      {
+        name: "Winstar",
+        image: "https://image2url.com/r2/default/images/1770028533507-a466e930-990d-4522-8a2c-096f24941c40.png",
+        playerUrl: "http://server.winstar99999.com:8009/",
+        agent: "https://agent.winstar99999.com/admin/login"
+      },
+      {
+        name: "Lucky Stars",
+        image: "https://image2url.com/r2/default/images/1770028570959-15acb8bd-d1df-496b-9250-335e54e346a0.png",
+        playerUrl: "https://www.luckystars.games/",
+        agent: "https://agent.luckystars.games/admin/login"
+      },
+      {
+        name: "Sirius",
+        image: "https://image2url.com/r2/default/images/1770028606012-aec4e227-f92b-46ee-b3ff-d82243916ac0.png",
+        playerUrl: "https://m.gamesirius999.com/",
+        agent: "https://agent.gamesirius999.com/login"
+      },
+      {
+        name: "Mr. All In One",
+        image: "https://image2url.com/r2/default/images/1770028649417-920d78bd-5119-46a6-88d0-2dcc24753c42.png",
+        playerUrl: "https://www.mrallinone777.com/",
+        agent: "https://agentserver.mrallinone777.com/admin/login"
+      },
+      {
+        name: "Golden Dragon",
+        image: "https://image2url.com/r2/default/images/1770028694052-72e3e04f-f647-4de4-b024-c104bf64cd2d.png",
+        playerUrl: "https://playgd.mobi/SSLobby/m5675.0/web-mobile/index.html?",
+        agent: "https://backend.goldendragoncity.com/"
+      },
+      {
+        name: "King of Pop",
+        image: "https://image2url.com/r2/default/images/1770028723949-9745e65f-0bc9-4419-bbca-3b7411c7d2e5.png",
+        playerUrl: "https://www.slots88888.com/",
+        agent: "http://agentserver.slots88888.com:8003/admin/login"
+      },
+      {
+        name: "Vegas Roll",
+        image: "https://image2url.com/r2/default/images/1770028755847-e102a108-22f8-4a9a-a9be-4d44fbc5c23c.png",
+        playerUrl: "https://www.vegas-roll.com/",
+        agent: "https://backend.vegas-roll.com/admin/login"
+      },
+      {
+        name: "Casino Royale",
+        image: "https://image2url.com/r2/default/images/1770028800746-f829a05c-06a8-4653-b8ee-3a3040a37077.png",
+        playerUrl: "https://m.casinoroyale07.com/",
+        agent: "http://agent.casinoroyale07.com/"
+      },
+      {
+        name: "Para Casino",
+        image: "https://image2url.com/r2/default/images/1770028838535-7feaf02a-ea23-4510-b253-291b45ca6b47.png",
+        playerUrl: "https://download.paracasino.net/",
+        agent: "https://agent.paracasino.net/#/pages/login/login"
+      },
+      {
+        name: "Winner's Club",
+        image: "https://image2url.com/r2/default/images/1770028874134-3c2ad186-d035-4f43-89d6-3815976063c4.png",
+        playerUrl: "https://www.winnersclub777.com/",
+        agent: "http://agent.winnersclub777.com:8003/admin/login"
+      },
+      {
+        name: "Vegas Luck",
+        image: "https://image2url.com/r2/default/images/1770028914073-31e7c8f7-ee40-4639-bb32-0ec9aca19ed5.png",
+        playerUrl: "https://start.vegasluck777.com/",
+        agent: "https://www.vegasluck777.com/admin/login"
+      },
+      {
+        name: "Billion Balls",
+        image: "https://image2url.com/r2/default/images/1770028945044-09e66d73-25f9-46ce-a635-7b689419963b.png",
+        playerUrl: "https://billionballs.win/",
+        agent: "https://billionballs.win/my/login"
+      },
+      {
+        name: "Vegas Empire",
+        image: "https://image2url.com/r2/default/images/1770028997901-6300c03d-66c9-458d-80ca-7d3ed34cf588.png",
+        playerUrl: "https://vegasempire.co/download",
+        agent: "https://app.vegasempire.co/#/login"
+      },
+      {
+        name: "Mega Winner",
+        image: "https://image2url.com/r2/default/images/1770029030025-a626d9d0-64bb-4a0e-822e-6e57fb92a70a.png",
+        playerUrl: "https://megawinner.win:8888/index.html",
+        agent: "https://megawinner.win:8781/"
+      },
+      {
+        name: "Spin City",
+        image: "https://image2url.com/r2/default/images/1770029057939-59ecaf87-158c-465d-83a9-0a72ebe175bc.png",
+        playerUrl: "https://play.spincity777.vip/",
+        agent: "https://store.spincity777.vip/?ReturnUrl=%2FUser"
+      },
+      {
+        name: "Fun Station",
+        image: "https://image2url.com/r2/default/images/1770029117554-8bb33176-dc2a-44f2-8619-ee73a12b67da.png",
+        playerUrl: "https://www.funstation.site/download/",
+        agent: "https://admin.funstation.site/index/login"
+      },
+      {
+        name: "Glamour Spin",
+        image: "https://image2url.com/r2/default/images/1770029178693-40474d5a-8ebd-4b0f-b148-e0367cd32877.png",
+        playerUrl: "https://www.glamourspin.mobi/",
+        agent: "https://acwwf.glamourspin.mobi/"
+      },
+      {
+        name: "GameVault77",
+        image: "https://image2url.com/r2/default/images/1770029211127-d6aff90c-0039-4114-8c51-81f09801765f.png",
+        playerUrl: "https://www.gamevault77777.com/",
+        agent: "https://agent.gamevault77777.com/admin"
+      },
+    ];
+
+    // ======= UI STATE =======
+    let mode = "player"; // 'player' | 'agent'
+
+    const els = {
+      grid: document.getElementById('grid'),
+      empty: document.getElementById('empty'),
+      count: document.getElementById('count'),
+      search: document.getElementById('search'),
+      btnPlayer: document.getElementById('btnPlayer'),
+      btnAgent: document.getElementById('btnAgent'),
+      modeLabel: document.getElementById('modeLabel'),
+      year: document.getElementById('year'),
+      modalBackdrop: document.getElementById('modalBackdrop'),
+      modalClose: document.getElementById('modalClose'),
+      modalTitle: document.getElementById('modalTitle'),
+      modalSub: document.getElementById('modalSub'),
+      modalLinks: document.getElementById('modalLinks'),
+      sparkles: document.getElementById('sparkles')
+    };
+
+    els.year.textContent = new Date().getFullYear();
+
+    function setMode(next){
+      mode = next;
+      const isPlayer = mode === 'player';
+      els.btnPlayer.classList.toggle('active', isPlayer);
+      els.btnAgent.classList.toggle('active', !isPlayer);
+      els.btnPlayer.setAttribute('aria-selected', String(isPlayer));
+      els.btnAgent.setAttribute('aria-selected', String(!isPlayer));
+      els.modeLabel.textContent = isPlayer ? 'Player' : 'Agent';
+      render();
+    }
+
+    els.btnPlayer.addEventListener('click', () => setMode('player'));
+    els.btnAgent.addEventListener('click', () => setMode('agent'));
+
+    els.search.addEventListener('input', render);
+
+    // ======= RENDER =======
+    function normalize(s){ return (s || '').toLowerCase().trim(); }
+
+    function render(){
+      const q = normalize(els.search.value);
+      const filtered = GAMES.filter(g => normalize(g.name).includes(q));
+
+      els.grid.innerHTML = '';
+      els.count.textContent = filtered.length;
+      els.empty.style.display = filtered.length ? 'none' : 'block';
+
+      for(const g of filtered){
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.tabIndex = 0;
+        card.setAttribute('role', 'button');
+        card.setAttribute('aria-label', `${g.name} (${mode})`);
+
+        const inner = document.createElement('div');
+        inner.className = 'inner';
+
+        const logo = document.createElement('div');
+        logo.className = 'logo';
+        const img = document.createElement('img');
+        img.alt = g.name;
+        img.loading = 'lazy';
+        img.referrerPolicy = 'no-referrer';
+        img.src = g.image || '';
+        img.onerror = () => {
+          img.remove();
+          logo.style.background = 'linear-gradient(135deg, rgba(124,92,255,.55), rgba(0,229,255,.35))';
+          logo.innerHTML = `<span style="font-weight:900; font-size:18px;">${g.name.split(' ').slice(0,2).map(x=>x[0]).join('')}</span>`;
+        };
+        logo.appendChild(img);
+
+        const name = document.createElement('div');
+        name.className = 'name';
+        name.textContent = g.name;
+
+        const tag = document.createElement('div');
+        tag.className = 'tag';
+        tag.textContent = (mode === 'player') ? 'Open Player' : 'Open Agent';
+
+        inner.appendChild(logo);
+        inner.appendChild(name);
+        inner.appendChild(tag);
+        card.appendChild(inner);
+
+        const open = () => openGame(g);
+        card.addEventListener('click', open);
+        card.addEventListener('keydown', (e) => {
+          if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); open(); }
+        });
+
+        els.grid.appendChild(card);
+      }
+    }
+
+    function openGame(game){
+      if(mode === 'player'){
+        if(game.playerUrl) window.open(game.playerUrl, '_blank', 'noopener,noreferrer');
+        return;
+      }
+
+      // agent
+      const a = game.agent;
+      if(!a) return;
+
+      if(typeof a === 'string'){
+        window.open(a, '_blank', 'noopener,noreferrer');
+        return;
+      }
+
+      // multiple agent links => modal
+      openModal(game.name, a);
+    }
+
+    // ======= MODAL =======
+    function openModal(gameName, links){
+      els.modalTitle.textContent = `${gameName} — Agent`;
+      els.modalSub.textContent = 'Choose a portal to open';
+      els.modalLinks.innerHTML = '';
+
+      for(const item of links){
+        const a = document.createElement('a');
+        a.className = 'linkbtn';
+        a.href = item.url;
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer';
+        a.innerHTML = `<span>${item.label}</span><span class="arrow">↗</span>`;
+        els.modalLinks.appendChild(a);
+      }
+
+      els.modalBackdrop.style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal(){
+      els.modalBackdrop.style.display = 'none';
+      document.body.style.overflow = '';
+    }
+
+    els.modalClose.addEventListener('click', closeModal);
+    els.modalBackdrop.addEventListener('click', (e)=>{ if(e.target === els.modalBackdrop) closeModal(); });
+    window.addEventListener('keydown', (e)=>{ if(e.key === 'Escape') closeModal(); });
+
+    // ======= SPARKLES =======
+    (function makeSparkles(){
+      const N = 18;
+      for(let i=0;i<N;i++){
+        const s = document.createElement('div');
+        s.className = 'sparkle';
+        const x1 = Math.floor(Math.random()*100);
+        const x2 = Math.floor(Math.random()*100);
+        const t = (10 + Math.random()*18).toFixed(1);
+        const sc = (0.6 + Math.random()*1.4).toFixed(2);
+        const size = 6 + Math.random()*10;
+        s.style.left = x1 + 'vw';
+        s.style.width = size + 'px';
+        s.style.height = size + 'px';
+        s.style.setProperty('--x1', x1 + 'vw');
+        s.style.setProperty('--x2', x2 + 'vw');
+        s.style.setProperty('--t', t + 's');
+        s.style.setProperty('--s', sc);
+        s.style.animationDelay = (-Math.random()*parseFloat(t)) + 's';
+        els.sparkles.appendChild(s);
+      }
+    })();
+
+    // first paint
+    render();
+  </script>
+</body>
+</html>
